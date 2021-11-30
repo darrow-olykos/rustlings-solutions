@@ -10,8 +10,7 @@ use std::error;
 use std::fmt;
 use std::num::ParseIntError;
 
-// TODO: update the return type of `main()` to make this compile.
-fn main() -> Result<(), ParseIntError> {
+fn main() -> Result<(), GenericError> {
     let pretend_user_input = "42";
     let x: i64 = pretend_user_input.parse()?;
     println!("output={:?}", PositiveNonzeroInteger::new(x)?);
@@ -29,12 +28,18 @@ enum CreationError {
     Zero,
 }
 
+#[derive(PartialEq, Debug)]
+enum GenericError {
+    CreationError(CreationError),
+    ParseIntError(ParseIntError)
+}
+
 impl PositiveNonzeroInteger {
     fn new(value: i64) -> Result<PositiveNonzeroInteger, CreationError> {
         match value {
             x if x < 0 => Err(CreationError::Negative),
             x if x == 0 => Err(CreationError::Zero),
-            x => Ok(PositiveNonzeroInteger(x as u64))
+            x => Ok(PositiveNonzeroInteger(x as u64)),
         }
     }
 }
@@ -51,3 +56,15 @@ impl fmt::Display for CreationError {
 }
 
 impl error::Error for CreationError {}
+
+impl From<CreationError> for GenericError {
+    fn from(e: CreationError) -> Self {
+        GenericError::CreationError(e)
+    }
+}
+
+impl From<ParseIntError> for GenericError {
+    fn from(e: ParseIntError) -> Self {
+        GenericError::ParseIntError(e)
+    }
+}
